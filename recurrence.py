@@ -1,24 +1,36 @@
 import numpy as np
-def sum(array):
-    sum=0
-    for i in range(len(array)):
-        sum+=array[i]
-    return sum
+import matplotlib.pyplot as plt
 
-def f(k):
-    R1=[8/21]
-    R2=[4/21]
-    R3=[2/21]
-    for i in range(k):
-        R2.append(R2[-1]+1)
-        R3.append(R3[-1]+2/3)
-        d=R2[-1]*R3[-1]*(1/3)/(R2[-1]+R3[-1]+1/3)
-        R1.append(3*d)
-        R3.append(d/R2[-1])
-        R2.append(d/R3[-2])
-    return (((R3[-1]+4/3)*(R2[-1]+1)/(R2[-1]+1+R3[-1]+4/3))+sum(R1)+1/3)/k
+def deltaY(R):
+    return np.prod(R)/np.sum(R)/R # R1, R2, R3 returned if Ra, Rb and Rc inserted
 
-for i in range(1000000, 1000000+1):
-    print(f(i))
+def resistances(k):
+    results = []
+    Rstrand = 0 # Compounding sum of delta-Y R1
+    R = np.ones(3) # Ra, Rb, Rc vector
+    for i in range(1, 2*k+1):
+        Ry = deltaY(R)
+        Rstrand += Ry[0]
+        R[1] = Ry[2]+((i+1) % 2)
+        R[2] = Ry[1]+(i % 2)
+        if(i % 2 == 0): results.append((Rstrand+R[2])/(i/2))
 
+    return results
 
+N_TRIALS = 100
+X = np.arange(N_TRIALS)+1
+Y = resistances(N_TRIALS)
+Y_line = np.full_like(Y, 0.4)
+
+fig, axes = plt.subplots(figsize=(16, 8))
+
+axes.plot(X, Y)
+axes.plot(X, Y_line, "--")
+
+axes.set(
+    title = "Loss Curve of $\\frac{R_{eff}}{n}$ of Recurrent Resistor Network (size $n$)",
+    xlabel = "$n$",
+    ylabel = "$\\frac{R_{eff}}{n}$"
+)
+
+plt.show()
